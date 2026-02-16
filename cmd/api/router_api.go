@@ -9,7 +9,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
 
-	serviceUser "github.com/ArkaniLoveCoding/School-manajement/service/users"
+	serviceUser "github.com/ArkaniLoveCoding/Shcool-manajement/service/users"
 )
 
 type ApiServer struct {

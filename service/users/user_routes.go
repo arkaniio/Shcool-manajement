@@ -3,8 +3,8 @@ package service
 import (
 	"net/http"
 
-	"github.com/ArkaniLoveCoding/School-manajement/types"
-	"github.com/ArkaniLoveCoding/School-manajement/utils"
+	"github.com/ArkaniLoveCoding/Shcool-manajement/types"
+	"github.com/ArkaniLoveCoding/Shcool-manajement/utils"
 )
 
 // this is for router that token is not verified in their function!
@@ -32,7 +32,7 @@ func (h *HandleRequest) Register_Bp(w http.ResponseWriter, r *http.Request) {
 	//create the payload of the json
 	var payload types.Register
 	if err := utils.DecodeData(r, &payload); err != nil {
-		utils.resp
+		
 	}
 
 }

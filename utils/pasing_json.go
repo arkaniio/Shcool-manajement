@@ -28,7 +28,7 @@ func ResponseJson (w http.ResponseWriter, code int, data interface{}) error {
 
 }
 
-func responseSuccess (w http.ResponseWriter, code int, message string, data interface{}) error {
+func responseSuccess(w http.ResponseWriter, code int, message string, data interface{}) error {
 
 	response_json := JsonParams{
 		Message: message,
@@ -44,7 +44,7 @@ func responseSuccess (w http.ResponseWriter, code int, message string, data inte
 
 }
 
-func responseError (w http.ResponseWriter, code int, message string, data interface{}) error {
+func responseError(w http.ResponseWriter, code int, message string, data interface{}) error {
 
 	response_json := JsonParams{
 		Message: message,

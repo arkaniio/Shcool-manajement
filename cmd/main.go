@@ -10,9 +10,9 @@ import (
 
 	"github.com/jmoiron/sqlx"
 
-	"github.com/ArkaniLoveCoding/Golang-Restfull-Api-MySql/cmd/api"
-	"github.com/ArkaniLoveCoding/Golang-Restfull-Api-MySql/config"
-	"github.com/ArkaniLoveCoding/Golang-Restfull-Api-MySql/db"
+	"github.com/ArkaniLoveCoding/Shcool-manajement/cmd/api"
+	"github.com/ArkaniLoveCoding/Shcool-manajement/config"
+	"github.com/ArkaniLoveCoding/Shcool-manajement/db"
 )
 
 func main() {

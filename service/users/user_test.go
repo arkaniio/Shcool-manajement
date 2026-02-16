@@ -1,17 +1,11 @@
 package service
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 
 	"github.com/google/uuid"
-	"github.com/gorilla/mux"
 
-	"github.com/ArkaniLoveCoding/School-manajement/types"
+	"github.com/ArkaniLoveCoding/Shcool-manajement/types"
 )
 
 type mockStore struct {
@@ -36,7 +30,7 @@ func (m *mockStore) GetUserByEmail(email string) (*types.User, error) {
 }
 
 func (m *mockStore) CreateUser(ctx context.Context, user *types.User) error {
-	
+
 	return m.CreateUserFn(ctx, user)
 
 }

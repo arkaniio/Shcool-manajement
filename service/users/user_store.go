@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 
-	"github.com/ArkaniLoveCoding/School-manajement/types"
+	"github.com/ArkaniLoveCoding/Shcool-manajement/types"
 )
 
 type Store struct {

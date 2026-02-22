@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
 
+	"github.com/ArkaniLoveCoding/Shcool-manajement/middleware"
 	serviceUser "github.com/ArkaniLoveCoding/Shcool-manajement/service/users"
 )
 
@@ -43,13 +44,49 @@ func (s *ApiServer) Run() error {
 		}`))
 	})
 
-	// not authenticate 
-
+	// the router for the services
 	userStore := serviceUser.NewStore(s.db)
 	userService := serviceUser.NewHandlerUser(userStore)
 
-	userStores := serviceUser.NewStore(s.db)
-	userServices := serviceUser.NewHandlerUserForAuthenticate(userStores)
+	//router for the resgister user
+	subRouter.Handle(
+		"/register",
+		http.HandlerFunc(
+			userService.Register_Bp,
+		),
+	).Methods("POST")
+
+	//router for the login user
+	subRouter.Handle(
+		"/login",
+		http.HandlerFunc(
+			userService.Login_Bp,
+		),
+	).Methods("POST")
+
+	//router for the profile user
+	subRouter.Handle(
+		"/profile",
+		middleware.TokenIdMiddleware(http.HandlerFunc(
+			userService.Profile_Bp,
+		)),
+	).Methods("GET")
+
+	//router for the update user
+	subRouter.Handle(
+		"/users/{id}",
+		http.HandlerFunc(
+			userService.Update_Bp,
+		),
+	).Methods("PATCH")
+
+	//router to see the file path for frontend to catch it 
+	subRouter.Handle(
+		"/users/profile/{filename}",
+		http.HandlerFunc(
+			userService.Image_Bp,
+		),
+	).Methods("GET")
 
 	// Create HTTP server
 	s.server = &http.Server{

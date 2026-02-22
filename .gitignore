@@ -1,0 +1,6 @@
+.env
+go.mod
+go.sum
+README.md 
+MakeFile
+TODO.md

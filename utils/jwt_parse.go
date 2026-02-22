@@ -12,15 +12,13 @@ import (
 
 type SignedDetails struct {
 	Id 			string
-	Firstname 	string
-	Lastname  	string
-	Password  	string
-	Email     	string
+	Username 	string 
+	Email 		string 
 	Role      	string
 	jwt.RegisteredClaims
 }
 
-func GenerateJwt (id uuid.UUID, firstname string, lastname string, password string, email string, role string) (string, string, error) {
+func GenerateJwt (id uuid.UUID, username string, email string, role string) (string, string, error) {
 	
 	if err := godotenv.Load(); err != nil {
 		return "", "", errors.New("Failed to load env as you want!")
@@ -29,9 +27,7 @@ func GenerateJwt (id uuid.UUID, firstname string, lastname string, password stri
 
 	signed_details_not_refresh := &SignedDetails{
 		Id: id.String(),
-		Firstname: firstname,
-		Lastname: lastname,
-		Password: password,
+		Username: username,
 		Email: email,
 		Role: role,
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -52,9 +48,7 @@ func GenerateJwt (id uuid.UUID, firstname string, lastname string, password stri
 
 	signed_details_refresh := &SignedDetails{
 		Id: id.String(),
-		Firstname: firstname,
-		Lastname: lastname,
-		Password: password,
+		Username: username,
 		Email: email,
 		Role: role, 
 		RegisteredClaims: jwt.RegisteredClaims{

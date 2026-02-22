@@ -28,7 +28,7 @@ func ResponseJson (w http.ResponseWriter, code int, data interface{}) error {
 
 }
 
-func responseSuccess(w http.ResponseWriter, code int, message string, data interface{}) error {
+func ResponseSuccess(w http.ResponseWriter, code int, message string, data interface{}) error {
 
 	response_json := JsonParams{
 		Message: message,
@@ -44,7 +44,7 @@ func responseSuccess(w http.ResponseWriter, code int, message string, data inter
 
 }
 
-func responseError(w http.ResponseWriter, code int, message string, data interface{}) error {
+func ResponseError(w http.ResponseWriter, code int, message string, data interface{}) error {
 
 	response_json := JsonParams{
 		Message: message,
@@ -58,4 +58,12 @@ func responseError(w http.ResponseWriter, code int, message string, data interfa
 
 	return nil
 
+}
+
+//to decode the ptr
+func Safe (ptr *string) string {
+	if ptr == nil {
+		return ""
+	}
+	return *ptr
 }

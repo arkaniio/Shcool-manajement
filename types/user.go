@@ -9,19 +9,14 @@ import (
 
 
 type UserStore interface {
-	GetUserByEmail(email string) (*User, error)
+	GetUserByEmailAndUsername(email string, username string) (*User, error)
 	CreateUser(ctx context.Context, user *User) error 
 	UpdateDataUser(
 		id uuid.UUID,
 		ctx context.Context,
-		firstname string,
-		lastname string,
-		password string,
-		email string,
-		country string,
-		address string,
-		user *User,
+		payload Update,
 		) error
+	GetUserById(id uuid.UUID) (*User, error)
 }
 
 type User struct {
@@ -29,8 +24,8 @@ type User struct {
 	Username 		string  	`db:"username"`
 	Email 			string  	`db:"email"`
 	Password 		string 		`db:"password"`
+	Profile_Image 	string 		`db:"profile_image"`
 	Role 			string 		`db:"role"`
-	Profile__Image	string  	`db:"profile_image"`
 	Created_at 		time.Time 	`db:"created_at"`
 	Updated_at		time.Time 	`db:"updated_at"`
 }
@@ -47,6 +42,7 @@ type Register struct {
 }
 
 type Login struct {
+	Username 		string 	`json:"username" validate:"required"`
 	Email 			string	`json:"email" validate:"required,email"`
 	Password 		string	`json:"password" validate:"required,min=2,max=100"`
 }
@@ -60,4 +56,12 @@ type UserResponse struct {
 	Role 			string 		`json:"role"`
 	Created_at 		string  	`json:"created_at"`
 	Updated_at 		string 		`json:"updated_at"`
+}
+
+type Update struct {
+	Username 		*string 	`json:"username"`
+	Email 			*string  	`json:"email"`
+	Password 		*string 	`json:"password"`
+	Profile_Image 	*string 	`json:"profile_image"`
+	Updated_at      *string  	`json:"updated_at"`
 }

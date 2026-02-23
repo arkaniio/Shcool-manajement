@@ -3,13 +3,14 @@ package api
 import (
 	"context"
 	"errors"
-	"log"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
 
 	"github.com/ArkaniLoveCoding/Shcool-manajement/middleware"
+	serviceStudent "github.com/ArkaniLoveCoding/Shcool-manajement/service/students"
 	serviceUser "github.com/ArkaniLoveCoding/Shcool-manajement/service/users"
 )
 
@@ -28,13 +29,19 @@ func ApiServerAddr(addr string, db *sqlx.DB) *ApiServer {
 
 func (s *ApiServer) Run() error {
 
-	//setup mux router
+	// Setup mux router
 	router := mux.NewRouter()
 
-	//subrouter of all this router on this router
+	// Apply global middleware (order matters - first to last)
+	// 1. Request ID middleware - adds unique ID to each request
+	router.Use(middleware.RequestIDMiddleware)
+	// 2. Logger middleware - logs all HTTP requests with socket hang up detection
+	router.Use(middleware.LoggerResponse)
+
+	// Subrouter for API v1
 	subRouter := router.PathPrefix("/api/v1").Subrouter()
 
-	// testing if the server is working!
+	// Testing if the server is working!
 	subRouter.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -44,11 +51,11 @@ func (s *ApiServer) Run() error {
 		}`))
 	})
 
-	// the router for the services
+	// The router for the services
 	userStore := serviceUser.NewStore(s.db)
 	userService := serviceUser.NewHandlerUser(userStore)
 
-	//router for the resgister user
+	// Router for the register user
 	subRouter.Handle(
 		"/register",
 		http.HandlerFunc(
@@ -56,7 +63,7 @@ func (s *ApiServer) Run() error {
 		),
 	).Methods("POST")
 
-	//router for the login user
+	// Router for the login user
 	subRouter.Handle(
 		"/login",
 		http.HandlerFunc(
@@ -64,23 +71,21 @@ func (s *ApiServer) Run() error {
 		),
 	).Methods("POST")
 
-	//router for the profile user
+	// Router for the profile user (with auth middleware)
 	subRouter.Handle(
 		"/profile",
-		middleware.TokenIdMiddleware(http.HandlerFunc(
-			userService.Profile_Bp,
-		)),
+		middleware.TokenIdMiddleware(
+			http.HandlerFunc(userService.Profile_Bp),
+		),
 	).Methods("GET")
 
-	//router for the update user
+	// Router for the update user (with auth middleware)
 	subRouter.Handle(
 		"/users/{id}",
-		http.HandlerFunc(
-			userService.Update_Bp,
-		),
+			http.HandlerFunc(userService.Update_Bp),
 	).Methods("PATCH")
 
-	//router to see the file path for frontend to catch it 
+	// Router to see the file path for frontend to catch it
 	subRouter.Handle(
 		"/users/profile/{filename}",
 		http.HandlerFunc(
@@ -88,18 +93,33 @@ func (s *ApiServer) Run() error {
 		),
 	).Methods("GET")
 
+	//router for the student routes
+	studentStore := serviceStudent.NewStudentStore(s.db)
+	studentService := serviceStudent.NewHandlerStudent(studentStore)
+
+	//router for register as a student
+	subRouter.Handle(
+		"/students/register",
+			middleware.TokenIdMiddleware(http.HandlerFunc(
+				studentService.RegisterAsStudent_Bp,
+			)),
+	).Methods("POST")
+
 	// Create HTTP server
 	s.server = &http.Server{
-		Addr:   s.Addr,
-		Handler: router,
+		Addr:         s.Addr,
+		Handler:      router,
+		// Timeouts to prevent slowloris attacks
+		ReadTimeout:  15 * time.Second,  // 15 minutes
+		WriteTimeout: 15 * time.Second,  // 15 minutes
+		IdleTimeout:  60 * time.Second,       // 60 seconds
 	}
 
-	log.Printf("Server starting on %s", s.Addr)
-
+	// Start listening
 	if err := s.server.ListenAndServe(); err != nil {
 		return errors.New(err.Error())
 	}
-	
+
 	return nil
 }
 
@@ -110,3 +130,4 @@ func (s *ApiServer) Shutdown(ctx context.Context) error {
 	}
 	return nil
 }
+

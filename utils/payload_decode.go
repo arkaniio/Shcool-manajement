@@ -2,21 +2,25 @@ package utils
 
 import (
 	"encoding/json"
-	"errors"
+	"fmt"
 	"net/http"
 )
 
 
-func DecodeData (r *http.Request, payload any) error  {
+func DecodeData (r *http.Request, v any) error  {
 
-	if r.Body == nil {
-		return errors.New("Failed to load body and decode it!")
+	if r.Header.Get("Content-Type") != "application/json" {
+		return fmt.Errorf("content-type must be application/json")
 	}
 
-	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		return errors.New(err.Error())
+	r.Body = http.MaxBytesReader(nil, r.Body, 1<<20) // 1MB limit
+
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+
+	if err := decoder.Decode(v); err != nil {
+		return err
 	}
 
 	return nil
-
 }

@@ -76,7 +76,7 @@ func ValidateToken (tokenAuth string) (*SignedDetails, error) {
 		return nil, errors.New("Failed to load env as you want!")
 	}
 	token := os.Getenv("JWT_SECRET_KEY")
-	token_refresh_env := os.Getenv("JWT_SECRET_KEY_REFRESH")
+	token_refresh_env := os.Getenv("JWT_SECRET_KEY_REFRESH_TOKEN")
 
 	token_not_refresh, err := jwt.ParseWithClaims(tokenAuth, claims, func(t *jwt.Token) (any, error) {
 		return []byte(token), nil

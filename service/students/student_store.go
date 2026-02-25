@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -21,6 +22,49 @@ type StudentStore struct {
 func NewStudentStore(db *sqlx.DB) *StudentStore {
 	return &StudentStore{db: db}
 }
+
+//helper for a pagination student
+
+type SortedConfig struct {
+	Column 		string 
+	Operator    string 
+	Order 		string
+}
+
+type Cursor struct {
+	Value 		any
+	Id 			string
+}
+
+func getSorted(sorted string, order string) SortedConfig {
+
+	//make the interface
+	sorted_descasc := map[string]string{
+	"created_at": "created_at",
+	"name": "name",
+	}
+
+	col, ok := sorted_descasc[sorted]
+	if !ok {
+		col = "created_at"
+	}
+
+	operator := "<"
+	description := "DESC"
+
+	if order == strings.ToLower("asc") {
+		operator = ">"
+		description = "ASC"
+	}
+
+	return SortedConfig{
+		Column: col,
+		Operator: operator,
+		Order: description,
+	}
+
+}
+
 
 //func that create a new student
 func (s *StudentStore) CreateNewStudent(ctx context.Context, student *types.Student) error {
@@ -104,5 +148,40 @@ func (s *StudentStore) GetStudentByName(name string) (*types.Student, error) {
 	}
 
 	return &students, nil
+
+}
+
+//get all student from db
+func (s *StudentStore) GetAllStudents(
+	ctx context.Context,
+	limit int,
+	sort string,
+	order string,
+	cursorValue any,
+	cursorID string,
+	) ([]types.Student, error) {
+
+	sort_config := getSorted(sort, order)
+
+	//base query
+	query := fmt.Sprintf(
+		`
+			SELECT * FROM id, name, class, address, major, student_profile, created_at, updated_at 
+			FROM users WHERE ($1 IS NULL OR (%s, id) %s ($1, $2))
+			ORDER BY %s, %s, id %s LIMIT $3;
+		`, sort_config.Column, sort_config.Operator, sort_config.Column, sort_config.Order, sort_config.Order, 
+	)
+
+	//execute the query 
+	var students []types.Student
+	if  err := s.db.SelectContext(ctx, &students, query); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, errors.New("Failed to get the students data")
+		}
+		return nil, nil
+	}
+
+	//return final result
+	return students, nil
 
 }

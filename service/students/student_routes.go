@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -147,5 +148,110 @@ func (h *HandleRequest) RegisterAsStudent_Bp(w http.ResponseWriter, r *http.Requ
 	
 	//return a final value
 	utils.ResponseSuccess(w, http.StatusCreated, "Register as a student has been successfully", students_response)
+
+}
+
+func (h *HandleRequest) GetAll_Bp(w http.ResponseWriter, r *http.Request) {
+
+	//get the request id from this func
+	requestID := middleware.GetRequestID(r)
+	if requestID == "" {
+		//make the logger data response for info
+		logger.Log.Info("Failed to get the request id from this func!", 
+			zap.String("client_ip", r.RemoteAddr),
+			zap.String("path", r.URL.Path),
+	)
+		utils.ResponseError(w, http.StatusBadRequest, "Failed to get the request id!", false)
+		return 
+	}
+
+	//get the middleware token to validate this method cannot see the other student
+	role_user, err := middleware.GetRoleMiddleware(w, r)
+	if err != nil {
+		//logger the data response if something error in this method
+		logger.Log.Error("Failed to get the role middleware", 
+			zap.String("request_id", requestID),
+			zap.String("client_ip", r.RemoteAddr),
+	)
+		utils.ResponseError(w, http.StatusBadRequest, "Failed to get the role middleware!", err.Error())
+	}
+	if role_user == "siswa" {
+		utils.ResponseError(w, http.StatusBadRequest, "Failed to access this method!", false)
+		return 
+	}
+
+	//define the query params 
+	limit := r.URL.Query().Get("limit")
+	sort := r.URL.Query().Get("sort")
+	order := r.URL.Query().Get("order")
+	cursor := r.URL.Query().Get("cursor")
+
+	//convert limit into an integer
+	limit_convert, err := strconv.Atoi(limit)
+	if err != nil {
+		//logger the data response if something went wrong with this method
+		logger.Log.Error("Failed to conver the data!", 
+			zap.String("request_id", requestID),
+			zap.String("client_ip", r.RemoteAddr),
+	)
+		utils.ResponseError(w, http.StatusBadRequest, "Failed to get the limit convert!", err.Error())
+		return 
+	}
+
+	//validate the limit
+	if limit_convert > 0 && limit_convert < 50 {
+		limit_convert = 10
+	}
+
+	//decode the value of the cursor
+	var valueCursor any
+	var IdCursor string
+	decode, err := utils.DecodeCursor(cursor)
+	if err != nil {
+		utils.ResponseError(w, http.StatusBadRequest, "Failed to get the cursor decode", err.Error())
+		return 
+	}
+	if decode != nil {
+		t, err := time.Parse(time.RFC3339, decode.Value)
+		if err != nil {
+			utils.ResponseError(w, http.StatusBadRequest, "Failed to get the time!", err.Error())
+			return 
+		}
+		valueCursor = t
+		IdCursor = decode.Id
+	}
+
+	//execute the query
+	ctx, cancle := context.WithTimeout(r.Context(), time.Second * 10)
+	defer cancle()
+	students, err := h.db.GetAllStudents(ctx, limit_convert, sort, order, valueCursor, IdCursor)
+	if err != nil {
+		//logger if the response is nill 
+		logger.Log.Error("Failed to get all the data student", 
+			zap.String("request_id", requestID),
+			zap.String("client_ip", r.RemoteAddr),
+	)
+		utils.ResponseError(w, http.StatusBadRequest, "Failed to get the all of the students", err.Error())
+		return 
+	}
+
+	//for the next cursor
+	var nextCursor *string
+	if len(students) > 0 {
+		last_students := students[len(students) - 1]
+		encode, err := utils.EncodeCursor(last_students.Created_at, last_students.Id.String()) 
+		if err == nil {
+			nextCursor = &encode
+		}
+	}
+
+	//make the struct for the data students
+	response_user := map[string]interface{}{
+		"data_students": students,
+		"next_cursor": nextCursor,
+	}
+	
+	//return a final result
+	utils.ResponseSuccess(w, http.StatusOK, "Get alll students has been successfully", response_user)
 
 }

@@ -10,6 +10,14 @@ import (
 type StudentStore interface {
 	CreateNewStudent(ctx context.Context, student *Student) error
 	GetStudentByName(name string) (*Student, error)
+	GetAllStudents(
+		ctx context.Context,
+		limit int,
+		sort string,
+		order string,
+		cursorValue any,
+		cursorID string,
+		) ([]Student, error)
 }
 
 type Student struct {

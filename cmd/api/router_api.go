@@ -105,6 +105,16 @@ func (s *ApiServer) Run() error {
 			)),
 	).Methods("POST")
 
+	//router for a get all students
+	subRouter.Handle(
+		"/students/list",
+		middleware.TokenIdMiddleware(
+			http.HandlerFunc(
+				studentService.GetAll_Bp,
+			),
+		),
+	).Methods("GET")
+
 	// Create HTTP server
 	s.server = &http.Server{
 		Addr:         s.Addr,
